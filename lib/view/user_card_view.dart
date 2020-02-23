@@ -45,49 +45,74 @@ class UserCardViewState extends State<UserCardView> {
   }
 
   Widget _buildBody(User user) {
-    return Card(
-      elevation: 5,
-      child: Stack(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              Flexible(
-                flex: 3,
-                child: Container(
-                  color: Colors.grey[200],
+    if (user != null) {
+      return Card(
+        elevation: 5,
+        child: Stack(
+          children: <Widget>[
+            Column(
+              children: <Widget>[
+                Flexible(
+                  flex: 3,
+                  child: Container(
+                    color: Colors.grey[200],
+                  ),
                 ),
-              ),
-              Divider(height: 1, color: Colors.grey),
-              Flexible(
-                flex: 7,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    Container(
-                      child: _viewInfo(_selectedIndex, user),
-                    ),
-                    SizedBox(height: 16),
-                    _buildBottomIcon(),
-                    SizedBox(height: 16)
-                  ],
+                Divider(height: 1, color: Colors.grey),
+                Flexible(
+                  flex: 7,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      Container(
+                        child: _viewInfo(_selectedIndex, user),
+                      ),
+                      SizedBox(height: 16),
+                      _buildBottomIcon(),
+                      SizedBox(height: 16)
+                    ],
+                  ),
+                )
+              ],
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 40,
+              child: Center(
+                child: _avatar(
+                  widget.isLocal ? (user.localImage ?? '') : (user.picture ?? ''), 
+                  size: 120,
                 ),
-              )
-            ],
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 40,
-            child: Center(
-              child: _avatar(
-                widget.isLocal ? (user.localImage ?? '') : (user.picture ?? ''), 
-                size: 120,
               ),
             ),
+          ],
+        ),
+      );
+    } else {
+      return DefaultTextStyle(
+        style: TextStyle(
+          color: Colors.black
+        ),
+        child: Container(
+          color: Colors.white,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text('Out of Users'),
+                FlatButton(
+                  child: Text('Reload'),
+                  onPressed: () {
+                    
+                  },
+                )
+              ],
+            ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
   }
 
   Widget _avatar(String imageUrl,{double size}) {
@@ -107,6 +132,7 @@ class UserCardViewState extends State<UserCardView> {
       )
     );
   }
+
    
   Widget _userInfo(User user){
     return Column(

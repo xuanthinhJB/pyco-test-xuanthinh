@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pyco_test_tony/mixin/permissions.dart';
 import 'package:pyco_test_tony/view/user_view.dart';
 
 class HomeView extends StatefulWidget {
@@ -6,7 +7,14 @@ class HomeView extends StatefulWidget {
   _HomeViewState createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with CheckPermission {
+
+  @override
+  void initState() {
+    _checkPermission();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,5 +46,9 @@ class _HomeViewState extends State<HomeView> {
         ],
       ),
     );
+  }
+
+  void _checkPermission() async {
+    await checkStoragePermission();
   }
 }

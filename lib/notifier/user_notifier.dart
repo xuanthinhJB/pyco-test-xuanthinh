@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_downloader/image_downloader.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:pyco_test_tony/data/service/user_service.dart';
+import 'package:pyco_test_tony/mixin/permissions.dart';
 import 'package:pyco_test_tony/model/user.dart';
 
-class UserNotifier extends ChangeNotifier {
+class UserNotifier extends ChangeNotifier with CheckPermission {
 
   UserService _userService;
 
@@ -18,8 +19,9 @@ class UserNotifier extends ChangeNotifier {
 
   UserNotifier(UserService userService) {
     _userService = userService;
-    _getUser();
   }
+
+  bool get haveInternet => _haveInternet;
 
   List<User> get favoriteItem => _favoriteItems;
 
@@ -31,30 +33,36 @@ class UserNotifier extends ChangeNotifier {
   }
 
   void setUser(User user) {
-    if (user != null)
+    if (user != null) {
       _users.add(user);
-    if (_users.length < 10) {
-      _getUser();
-    }
-    if (_users.length > 1) {
-      status = DataStatus.NORMAL;
-    } else if (_users.length == 1){
-      status = DataStatus.LOADING;
+      if (_users.length < 10) {
+        _getUser();
+      }
+      print('Number of users: ${users.length}');
+      if (_users.length > 0) {
+        status = DataStatus.NORMAL;
+      } else {
+        status = DataStatus.LOADING;
+      }
+      notifyListeners();
     } else {
-      status = DataStatus.NODATA;
+      _users = [];
+      notifyListeners();
     }
-    notifyListeners();
+    
   }
 
   void setUsers(List<User> users) {
-    _users = users ?? [];
+    _users.addAll(users ?? []);
+    status = DataStatus.NORMAL;
     notifyListeners();
   }
 
   void removeFirstItem() {
     try {
       _users.removeAt(0);
-      _getUser();
+      if (_haveInternet)
+        _getUser();
       notifyListeners();
     } catch (error) {
       print(error.toString());
@@ -66,29 +74,22 @@ class UserNotifier extends ChangeNotifier {
       try {
         User user = _users[0];
         await checkStoragePermission();
-        var downloadedId = await ImageDownloader.downloadImage(user.picture);
+        print(user.picture);
+        var downloadedId = await ImageDownloader.downloadImage(user.picture.replaceAll('http://', 'https://'));
         print(downloadedId);
         var filePath = await ImageDownloader.findPath(downloadedId);
+        print(filePath);
         user = user.rebuild((b) => b
           ..localImage = filePath);
-        _userService.addUserToDB(_users[0]);
-      } catch (error) {
-        print(error.toString());
+        _userService.addUserToDB(user);
+      } on PlatformException catch (error) {
+        print(error);
       }
     }
   }
 
-  Future<bool> checkStoragePermission() async {
-    var grand = await PermissionHandler().checkPermissionStatus(PermissionGroup.storage);
-    if (grand != PermissionStatus.granted){
-      var result = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
-      print('permission storage: $result');
-      if (result[PermissionGroup.contacts] == PermissionStatus.granted) {
-        return true;
-      }else{
-        return false;
-      }
-    } else return true;
+  void clearUsersInDB() {
+
   }
 
   Future<User> _getUser() async {
@@ -96,10 +97,14 @@ class UserNotifier extends ChangeNotifier {
       User user = await _userService.getUserInfo(_haveInternet)
       .catchError((error) {
         print(error);
+        setUser(null);
+        return null;
       })
       .timeout(Duration(seconds: 20), onTimeout: () {
+        setUser(null);
         return null;
       });
+      print(user.toString());
       setUser(user);
       return user;
     } else {
@@ -117,6 +122,5 @@ class UserNotifier extends ChangeNotifier {
 
 enum DataStatus {
   LOADING,
-  NORMAL,
-  NODATA
+  NORMAL
 }
