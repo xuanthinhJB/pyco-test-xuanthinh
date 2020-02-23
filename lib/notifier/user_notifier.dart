@@ -32,24 +32,25 @@ class UserNotifier extends ChangeNotifier with CheckPermission {
     _getUser();
   }
 
+  void getUser() {
+    _getUser();
+  }
+
   void setUser(User user) {
     if (user != null) {
       _users.add(user);
-      if (_users.length < 10) {
-        _getUser();
-      }
-      print('Number of users: ${users.length}');
-      if (_users.length > 0) {
-        status = DataStatus.NORMAL;
-      } else {
-        status = DataStatus.LOADING;
-      }
-      notifyListeners();
-    } else {
-      _users = [];
-      notifyListeners();
     }
-    
+
+    if (_users.length < 10) {
+      _getUser();
+    }
+    print('Number of users: ${users.length}');
+    if (_users.length > 0) {
+      status = DataStatus.NORMAL;
+    } else {
+      status = DataStatus.LOADING;
+    }
+    notifyListeners();
   }
 
   void setUsers(List<User> users) {
@@ -93,6 +94,7 @@ class UserNotifier extends ChangeNotifier with CheckPermission {
   }
 
   Future<User> _getUser() async {
+    print('get');
     if (_haveInternet) {
       User user = await _userService.getUserInfo(_haveInternet)
       .catchError((error) {
