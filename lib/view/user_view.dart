@@ -247,6 +247,8 @@ class _UserViewState extends State<UserView> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
       Provider.of<UserNotifier>(context).setInternetStatus(false);
+    } else {
+      Provider.of<UserNotifier>(context).setInternetStatus(true);
     }
     internetListenSub = Connectivity().onConnectivityChanged.listen((data) {
       if (data == ConnectivityResult.none) {
